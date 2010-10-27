@@ -1,0 +1,53 @@
+﻿PYWIKIPEDIA-FI
+
+Pywikipedia-fi on kokoelma Python Wikipedia Robot Frameworkiin
+(pywikipediaan) perustuvia työkaluja, joita käytetään
+suomenkielisessä Wikipediassa. Kokoelma sisältää seuraavat skriptit:
+
+birthcat.py - henkilöartikkelien lisääminen syntymä- ja
+              kuolinvuosiluokkiin
+sciname.py  - ohjausten lisääminen tieteellisistä nimistä
+              eliöartikkeleihin.
+
+Hankkeen sivusto: http://pywikipedia-fi.sourceforge.net/
+
+
+OHJEITA KÄYTTÄJILLE
+
+Näin saat pywikipedia-fi-työkalut käyttöön:
+
+1. Lataa ja ota käyttöön pywikikipedian tuorein versio:
+
+    svn co http://svn.wikimedia.org/svnroot/pywikipedia/trunk/pywikipedia pywikipedia
+
+2. Lataa pywikipedia-fi:n tuorein versio:
+
+    svn co https://pywikipedia-fi.svn.sourceforge.net/svnroot/pywikipedia-fi/trunk pywikipedia-fi
+
+3. Varmista, että botillasi on tarvittavat luvat suomenkielisessä
+   Wikipediassa:
+
+    http://fi.wikipedia.org/wiki/Wikipedia:Botit
+
+4. Kopioi tarvitsemasi skriptit hakemistosta pywikipedia-fi hakemistoon
+   pywikipedia. Kunkin skriptin käyttöohjeen voi tulostaa komennolla
+   "skripti -help".
+
+5. Aja!
+
+
+OHJEITA KEHITTÄJILLE
+
+Vaikka pywikipedia-fi on tarkoitettu suomenkielistä Wikipediaa varten,
+jotkin työkalumme saattavat päätyä osaksi yleisen
+pywikipedia-hankkeen osaksi. Siksi kannattaa noudattaa seuraavia
+periaatteita:
+
+* Yritä toteuttaa skriptit niin, että ne voidaan helposti laajentaa
+  muissa wikeissä käytettäviksi.
+* Nimeä luokat, metodit ja muuttujat englanniksi ja käytä englantia
+  myös koodin kommenteissa.
+* Tulosta vain skriptin käyttäjälle näkyvät tekstit englanniksi.
+* Kirjoita muokkausyhteenvedot ja muut suomenkielisessä Wikipediassa
+  näkyvät tekstit suomeksi, mutta toteuta ne aina pywikipedian
+  translate()-metodilla.
