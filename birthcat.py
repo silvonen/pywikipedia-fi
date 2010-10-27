@@ -96,6 +96,16 @@ class BirthCatBot:
         except KeyboardInterrupt:
             pywikibot.output('\nQuitting program...')
 
+    def getSortKey(self, cats, text):
+        if not self.defaultSortMatcher or not cats or self.defaultSortMatcher.search(text):
+            sortKey = None
+        else:
+            sortKey = cats[0].sortKey
+            if len(sortKey) > 0 and sortKey[0] in '* ':
+                sortKey = None
+
+        return sortKey
+       
     def treat(self, page):
         """
         Adds the page to the appropriate birth and death year categories.
@@ -119,10 +129,7 @@ class BirthCatBot:
                         year = numParams[bdCatInfo['templates'][tmpl] - 1].strip()
                     except IndexError:
                         continue
-                    if not self.defaultSortMatcher or not cats or self.defaultSortMatcher.search(text):
-                        sortKey = None
-                    else:
-                        sortKey = cats[0].sortKey
+                    sortKey = self.getSortKey(cats, text)
                     newCat = catlib.Category(self.site, bdCat % year, sortKey=sortKey)
                     if newCat in cats or newCat in addCats:
                         pywikibot.output(u"%s is already in %s." % (page.title(), newCat.title()))
@@ -137,10 +144,7 @@ class BirthCatBot:
                     if match:
                         year = match.group(1)
                         pywikibot.output(u'Found %s in %s' % (year, match.group(0)))
-                        if not self.defaultSortMatcher or not cats or self.defaultSortMatcher.search(text):
-                            sortKey = None
-                        else:
-                            sortKey = cats[0].sortKey
+                        sortKey = self.getSortKey(cats, text)
                         newCat = catlib.Category(self.site, bdCat % year, sortKey=sortKey)
                         if newCat in cats or newCat in addCats:
                             pywikibot.output(u"%s is already in %s." % (page.title(), newCat.title()))
@@ -151,7 +155,6 @@ class BirthCatBot:
         if addCats:
             cats.extend(addCats)
             text = pywikibot.replaceCategoryLinks(text, cats)
-##            pywikibot.output(text) # Debugging...
             summary = self.summary % ', '.join(map(lambda c: c.title(asLink=True), addCats))
             if not self.save(text, page, summary):
                 pywikibot.output(u'Page %s not saved.' % page.title(asLink=True))
