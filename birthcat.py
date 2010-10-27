@@ -101,7 +101,7 @@ class BirthCatBot:
             sortKey = None
         else:
             sortKey = cats[0].sortKey
-            if len(sortKey) > 0 and sortKey[0] in '* ':
+            if sortKey and sortKey[0] in '* ':
                 sortKey = None
 
         return sortKey
