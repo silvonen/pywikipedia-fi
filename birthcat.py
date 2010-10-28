@@ -48,7 +48,7 @@ class BirthCatBot:
                     },
                 're': [
                     re.compile(ur'syntynyt\s*=\s*' + dateFormat['fi']),
-                    re.compile(ur"'''[^)]*(?:\bs\.\s+|,\s+|\()" + dateFormat['fi']),
+                    re.compile(ur"'''[^)]*(?:\bs\.\s+|,\s+|\(|(?<!&ndash);\s+)" + dateFormat['fi']),
                     ],
                 'newcat': lambda yr: u'{{Syntymävuosiluokka|%s|%s}}' % (yr[:-1], yr[-1])
                 },
