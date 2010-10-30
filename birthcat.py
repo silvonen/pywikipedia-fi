@@ -59,7 +59,7 @@ class BirthCatBot:
                     },
                 're': [
                     re.compile(ur'kuollut\s*=\s*' + dateFormat['fi']),
-                    re.compile(ur"'''[^)]*(?:\bk\.\s+|(?:[–—-]|&ndash;)\s*)" + dateFormat['fi']),
+                    re.compile(ur"'''[^()]*\((?:[^)]|\([^)]*\))*(?:\bk\.\s+|(?:[–—-]|&ndash;)\s*)" + dateFormat['fi']),
                     ],
                 'newcat': lambda yr: u'{{Kuolinvuosiluokka|%s|%s}}' % (yr[:-1], yr[-1])
                 }
