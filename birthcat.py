@@ -34,6 +34,7 @@ class BirthCatBot:
         'fi': u'Botti loi uuden luokan',
     }
 
+    # TODO: Implement BC years
     dateFormat = {
         'fi': ur'(?:\[*\d+\.\s+\S+kuuta\]*,?\s+)?\[*(\d+)\]*',
         }
@@ -50,7 +51,7 @@ class BirthCatBot:
                     re.compile(ur'syntynyt\s*=\s*' + dateFormat['fi']),
                     re.compile(ur"'''[^)]*(?:\bs\.\s+|,\s+|\(|(?<!&ndash);\s+)" + dateFormat['fi']),
                     ],
-                'newcat': lambda yr: u'{{Syntymävuosiluokka|%s|%s}}' % (yr[:-1], yr[-1])
+                'newcat': lambda yr: u'{{Syntymävuosiluokka|%s|%s}}\n\n[[en:Category:%s births]]' % (yr[:-1], yr[-1], yr)
                 },
             u'Vuonna %s kuolleet' : {
                 'templates' :{
@@ -61,7 +62,7 @@ class BirthCatBot:
                     re.compile(ur'kuollut\s*=\s*' + dateFormat['fi']),
                     re.compile(ur"'''[^()]*\((?:[^)]|\([^)]*\))*(?:\bk\.\s+|(?:[–—-]|&ndash;)\s*)" + dateFormat['fi']),
                     ],
-                'newcat': lambda yr: u'{{Kuolinvuosiluokka|%s|%s}}' % (yr[:-1], yr[-1])
+                'newcat': lambda yr: u'{{Kuolinvuosiluokka|%s|%s}}\n\n[[en:Category:%s deaths]]' % (yr[:-1], yr[-1], yr)
                 }
             }
         }
