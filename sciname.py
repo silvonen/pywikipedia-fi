@@ -19,7 +19,7 @@ and the bot will only work on that single page.
 """
 __version__ = '$Id$'
 import wikipedia as pywikibot
-import pagegenerators, pickle, re
+import pagegenerators, os.path, pickle, re
 
 # This is required for the text that is shown when you run this script
 # with the parameter -help.
@@ -43,7 +43,7 @@ class SciNameBot:
         'fi': [ u'kaksiosainen', u'kolmiosainen' ]
     }
 
-    cacheFilename = u'cache/sciname'
+    cacheFilename = os.path.join(u'cache', u'sciname')
     
     def __init__(self, generator, dry, always):
         """
