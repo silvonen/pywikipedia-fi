@@ -49,7 +49,7 @@ class BirthCatBot:
                     },
                 're': [
                     re.compile(ur'syntynyt\s*=\s*' + dateFormat['fi']),
-                    re.compile(ur"'''[^)]*(?:\bs\.\s+|,\s+|\(|(?<!&ndash);\s+)" + dateFormat['fi']),
+                    re.compile(ur"'''[^)]*(?:\b(?:s\.|syntynyt)\s+|,\s+|\(|(?<!&ndash);\s+)" + dateFormat['fi']),
                     ],
                 'newcat': lambda yr: u'{{Syntymävuosiluokka|%s|%s}}\n\n[[en:Category:%s births]]' % (yr[:-1], yr[-1], yr)
                 },
@@ -60,7 +60,7 @@ class BirthCatBot:
                     },
                 're': [
                     re.compile(ur'kuollut\s*=\s*' + dateFormat['fi']),
-                    re.compile(ur"'''[^()]*\((?:[^)]|\([^)]*\))*(?:\bk\.\s+|(?:[–—-]|&ndash;)\s*)" + dateFormat['fi']),
+                    re.compile(ur"'''[^()]*\((?:[^)]|\([^)]*\))*(?:\b(?:k\.|kuollut)\s+|(?:[–—-]|&ndash;)\s*)" + dateFormat['fi']),
                     ],
                 'newcat': lambda yr: u'{{Kuolinvuosiluokka|%s|%s}}\n\n[[en:Category:%s deaths]]' % (yr[:-1], yr[-1], yr)
                 }
