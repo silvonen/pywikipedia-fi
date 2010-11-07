@@ -1,0 +1,16 @@
+diff -Naur pywikipedia/pywikibot/textlib.py pywikipedia-new/pywikibot/textlib.py
+--- pywikipedia/pywikibot/textlib.py	2010-11-07 12:57:04.712807260 +0200
++++ pywikipedia-new/pywikibot/textlib.py	2010-11-07 13:28:01.312807259 +0200
+@@ -654,10 +654,10 @@
+                 firstafter += len(marker)
+             # Is there text in the 'after' part that means we should keep it
+             # after?
+-            if "</noinclude>" in s2[firstafter:]:
++            if ("{{Link" in s2[firstafter:]) or ("</noinclude>" in s2[firstafter:]):
+                 if separatorstripped:
+                     s = separator + s
+-                newtext = s2[:firstafter].replace(marker, '') + s + \
++                newtext = s2[:firstafter].replace(marker, '') + "\n" + s + "\n" + \
+                           s2[firstafter:]
+             elif site.language() in site.family.categories_last:
+                 newtext = s2.replace(marker,'').strip() + separator + s

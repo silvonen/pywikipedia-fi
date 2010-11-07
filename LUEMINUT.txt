@@ -6,6 +6,8 @@ suomenkielisessä Wikipediassa. Kokoelma sisältää seuraavat skriptit:
 
 birthcat.py - henkilöartikkelien lisääminen syntymä- ja
               kuolinvuosiluokkiin
+birthcat_autorun.py - sama kuin edellinen, mutta lisää ilman vahvistusta luokat sellaisiin 
+              artikkeleihin joiden tiedot voidaan vahvistaa en,de,es wikeistä ja ohittaa muut.
 sciname.py  - ohjausten lisääminen tieteellisistä nimistä
               eliöartikkeleihin.
 
@@ -18,6 +20,8 @@ Näin saat pywikipedia-fi-työkalut käyttöön:
 
 1. Lataa ja ota käyttöön pywikikipedian tuorein versio:
 
+    svn co http://svn.wikimedia.org/svnroot/pywikipedia/trunk/pywikipedia pywikipedia
+
     http://pywikipediabot.sourceforge.net/
 
     Ohje: http://meta.wikimedia.org/wiki/Pywikipediabot
@@ -28,6 +32,11 @@ Näin saat pywikipedia-fi-työkalut käyttöön:
 3. Lataa pywikipedia-fi:n tuorein versio:
 
     svn co https://pywikipedia-fi.svn.sourceforge.net/svnroot/pywikipedia-fi/trunk pywikipedia-fi
+
+3b. päivitä pywikipedia huomioimaan fiwikin kielilinkkien ja luokkien välinen järjestys
+    mene pywikipedian hakemistoon ja aja käsky
+
+    patch -p1 <  ../pywikipedia-fi/pywikipedia-textlib.diff 
 
 4. Varmista, että botillasi on tarvittavat luvat suomenkielisessä
    Wikipediassa:
