@@ -60,7 +60,7 @@ class BirthCatBot:
                     # Searches "s. [[1971]] " type birthdate string.
                     re.compile(ur"(?:s\.|syn\.|syntynyt) ?\[?\[?([0-9]{1,4})\]?\]?[\−\–\-\& .,)]<"),
                     ],
-                'newcat': lambda yr: u'{{SyntymM-CM-$vuosiluokka|%s|%s}}\n\n[[en:Category:%s births]]' % (yr[:-1], yr[-1], yr)
+                'newcat': lambda yr: u'{{Syntymävuosiluokka|%s|%s}}\n\n[[en:Category:%s births]]' % (yr[:-1], yr[-1], yr)
                 },
             u'Vuonna %s kuolleet' : {
                 'templates' :{
