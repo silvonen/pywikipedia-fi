@@ -54,11 +54,11 @@ class BirthCatBot:
                     ],
                 're2': [
                     # Searches "s. [[26. huhtikuuta]] [[1971]] " type birthdate string.
-                    re.compile(ur"(?:s\.|syn\.|syntynyt) ?\[?\[?[0-9]{1,2}\. [A-Za-zäö]*kuuta[^()]*?([0-9]{1,4})\]?\]?[ .,)<]"),
+                    re.compile(ur"(?:s\.|syn\.|syntynyt) ?\[?\[?[0-9]{1,2}\. [A-Za-zäö]*kuuta[^()]*?([0-9]{1,4})\]?\]?[\−\–\-\& .,)<]"),
                     # Searches "([[26. huhtikuuta]] [[1971]] " type birthdate string.
-                    re.compile(ur"\(\[?\[?[0-9]{1,2}\. [A-Za-zäö]*kuuta[^()]*?([0-9]{1,4})\]?\]?[ .,)<]"),
+                    re.compile(ur"\(\[?\[?[0-9]{1,2}\. [A-Za-zäö]*kuuta[^()]*?([0-9]{1,4})\]?\]?[\−\–\-\& .,)<]"),
                     # Searches "s. [[1971]] " type birthdate string.
-                    re.compile(ur"(?:s\.|syn\.|syntynyt) ?\[?\[?([0-9]{1,4})\]?\]?[ .,)]<"),
+                    re.compile(ur"(?:s\.|syn\.|syntynyt) ?\[?\[?([0-9]{1,4})\]?\]?[\−\–\-\& .,)]<"),
                     ],
                 'newcat': lambda yr: u'{{SyntymM-CM-$vuosiluokka|%s|%s}}\n\n[[en:Category:%s births]]' % (yr[:-1], yr[-1], yr)
                 },
@@ -75,6 +75,8 @@ class BirthCatBot:
                 're2': [
                     # Searches "k. [[26. huhtikuuta]] [[1971]] " or "&dash; [[26. huhtikuuta]] [[1971]] " type deathdate string.
                     re.compile(ur"(?:−|–|-|&dash;|&ndash;|&mdash;|k\.) +?\[?\[?[0-9]{1,2}\. [A-Za-zäö]*kuuta[^()]*?([0-9]{1,4})\]?\]?[ ,.;)<]"),
+                    # Searches "k. [[huhtikuu]] [[1971]] " or "&dash; [[huhtikuu]] [[1971]] " type deathdate string.
+                    re.compile(ur"(?:−|–|-|&dash;|&ndash;|&mdash;|k\.) +?\[?\[?[A-Za-zäö]*kuu +[^()]*?([0-9]{1,4})\]?\]?[ ,.;)<]"),
                     # Searches "k. [[1971]] " or "&dash; [[1971]] " type deathdate string.
                     re.compile(ur"'''.{1,100}(?:−|–|-|&dash;|&ndash;|&mdash;|k\.) +?\[?\[?([0-9]{1,4})\]?\]?[ ,.;)<]"),
                     ],
@@ -227,6 +229,7 @@ class BirthCatBot:
                     pywikibot.output(u'%s should be created.' % (cat.title()))
                     if not self.save(newCatContent[cat.title()], cat, self.summaryNewCat, minorEdit=False):
                         pywikibot.output(u'%s not created.' % cat.title(asLink=True))
+                    time.sleep(2)
 
     def load(self, page):
         """
@@ -260,10 +263,10 @@ class BirthCatBot:
              'birth' : u"Geboren ([0-9]{1,4})",
              'death' : u"Gestorben ([0-9]{1,4})"
            },
-#          'fr': {
-#             'birth' : u"Naissance en ([0-9]{1,4})",
-#             'death' : u"Décès en ([0-9]{1,4})"
-#           },
+          'fr': {
+             'birth' : u"Naissance en ([0-9]{1,4})",
+             'death' : u"Décès en ([0-9]{1,4})"
+           },
           'es': {
              'birth' : u"Nacidos en ([0-9]{1,4})",
              'death' : u"Fallecidos en ([0-9]{1,4})"
@@ -288,6 +291,10 @@ class BirthCatBot:
         return None, None
 
     def iwYearCheck(self,page, birth, death):
+        age=int(death)-int(birth)
+        if age<0 or age>125: 
+           return False
+
         iwMatch=False
         deathOK=False
         birthOK=False
@@ -350,26 +357,31 @@ class BirthCatBot:
             pywikibot.showDiff(oldText, text)
             pywikibot.output(u'Comment: %s' %comment)
 
-            reMatcher= re.compile(u"Luokka:Vuonna ([0-9]{1,4}) syntyneet")
-            match=reMatcher.search(text)
-            if match:
-             birth=match.group(1)
-            else:
-             birth=None
+            # if we are not adding the new category then check years 
+            reMatcher= re.compile(u"\ALuokka:")
+            match=reMatcher.search(page.title())
 
-            reMatcher= re.compile(u"Luokka:Vuonna ([0-9]{1,4}) kuolleet")
-            match=reMatcher.search(text)
-            if match:
-             death=match.group(1)
-            else:
-             death=None
+            if not match:
+              reMatcher= re.compile(u"Luokka:Vuonna ([0-9]{1,4}) syntyneet")
+              match=reMatcher.search(text)
+              if match:
+                 birth=match.group(1)
+              else:
+                 birth=None
 
-            iwCheck=self.iwYearCheck(page, birth, death)
-            if iwCheck == False:
-               pywikibot.output(
-                  u'Skipping %s because of edit iwcheck failed'
-                  % (page.title()))
-               return False
+              reMatcher= re.compile(u"Luokka:Vuonna ([0-9]{1,4}) kuolleet")
+              match=reMatcher.search(text)
+              if match:
+                 death=match.group(1)
+              else:
+                 death=None
+
+              iwCheck=self.iwYearCheck(page, birth, death)
+              if iwCheck == False:
+                 pywikibot.output(
+                    u'Skipping %s because of edit iwcheck failed'
+                    % (page.title()))
+                 return False
 
             if not self.dry:
 #                choice = pywikibot.inputChoice(
@@ -396,9 +408,8 @@ class BirthCatBot:
         return False
 
 def main():
-    if 1:
-       print(u"Lapsilukko; Ennen kuin poistat lapsilukon niin varmista, että sinulla on bottitunnukset ja että olet korjannut pyfibot/textlib.py -tiedoston. (textlib.py.diff)")
-       return
+    print(u"Lapsilukko; Ennen kuin poistat lapsilukon niin varmista, että sinulla on bottitunnukset ja että olet korjannut pyfibot/textlib.py -tiedoston. (textlib.py.diff)")
+    return False
 
     # This factory is responsible for processing command line arguments
     # that are also used by other scripts and that determine on which pages
