@@ -291,15 +291,19 @@ class BirthCatBot:
         return None, None
 
     def iwYearCheck(self,page, birth, death):
-        age=int(death)-int(birth)
-        if age<0 or age>125: 
-           return False
+
 
         iwMatch=False
         deathOK=False
         birthOK=False
         if birth==None: 
            return False
+
+        if death!=None:
+          age=int(death)
+          if age<0 or age>125: 
+             return False
+
         iw=page.interwiki()
         for linkedPage in iw:        
              if linkedPage.site().lang not in ['en', 'de', 'es']:
