@@ -37,6 +37,7 @@ Näin saat pywikipedia-fi-työkalut käyttöön:
     mene pywikipedian hakemistoon ja aja käsky
 
     patch -p1 <  ../pywikipedia-fi/pywikipedia-textlib.diff 
+    patch -p0 <  ../pywikipedia-fi/pywikipedia-featured-fi.diff
 
 4. Varmista, että botillasi on tarvittavat luvat suomenkielisessä
    Wikipediassa:

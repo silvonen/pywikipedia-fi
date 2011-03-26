@@ -1,0 +1,156 @@
+Index: featured.py
+===================================================================
+--- featured.py	(revision 9133)
++++ featured.py	(working copy)
+@@ -30,6 +30,8 @@
+ 
+ -good             use this script for good articles.
+ 
++-promising        use this script for promising articles.
++
+ -former           use this script for removing {{Link FA|xx}} from former
+                   fearured articles
+ 
+@@ -140,6 +142,10 @@
+     'sv': u'Bot: [[%s:%s]] är en läsvärd artikel',
+ }
+ 
++msg_promising = {
++    'fi': u'Botti: [[%s:%s]] on lupaava artikkeli'
++}
++
+ msg_lists = {
+     'als':u'Bötli: [[%s:%s]] isch e bsunders glungene Lischte',
+     'ar': u'بوت: [[%s:%s]] هي قائمة مختارة',
+@@ -217,6 +223,11 @@
+     '_default': ['Link FL'],
+ }
+ 
++template_promising = {
++    '_default': ['Link LA'],
++    'fi': ['Link LA']
++}
++
+ featured_name = {
+     'af': (BACK,u"Voorbladster"),
+     'als':(CAT, u"Wikipedia:Bsunders glungener Artikel"),
+@@ -397,6 +408,12 @@
+     'zh': (CAT, u"Wikipedia_former_featured_articles"),
+ }
+ 
++promising_name = {
++    'fi': (CAT, u"Lupaavat artikkelit"),
++    'da': (CAT, u"Lovende_artikler"),
++    'sv': (CAT, u"Wikipedia:Rekommenderade artiklar")
++}
++
+ # globals
+ interactive=0
+ nocache=0
+@@ -412,6 +429,8 @@
+             method=former_name[site.lang][0]
+         elif pType == 'list':
+             method=lists_name[site.lang][0]
++        elif pType == 'promising':
++            method=promising_name[site.lang][0]
+         else:
+             method=featured_name[site.lang][0]
+     except KeyError:
+@@ -425,6 +444,8 @@
+         name=former_name[site.lang][1]
+     elif pType == 'list':
+         name=lists_name[site.lang][1]
++    elif pType == 'promising':
++        name=promising_name[site.lang][1]
+     else:
+         name=featured_name[site.lang][1]
+     raw=method(site, name)
+@@ -511,9 +532,15 @@
+     elif pType == 'list':
+         try:
+             templates = template_lists[lang]
+-            templatest+= template_lists['_default']
++            templates+= template_lists['_default']
+         except KeyError:
+             templates = template_lists['_default']
++    elif pType == 'promising':
++        try:
++            templates = template_promising[lang]
++            templates+= template_promising['_default']
++        except KeyError:
++            templates = template_promising['_default']
+     else: #pType in ['former', 'featured']
+         try:
+             templates = template[lang]
+@@ -573,6 +600,10 @@
+                                         comment = pywikibot.setAction(
+                                             pywikibot.translate(site, msg_lists)
+                                             % (fromsite.lang, a.title()))
++                                    elif pType == 'promising':
++                                        comment = pywikibot.setAction(
++                                            pywikibot.translate(site, msg_promising)
++                                            % (fromsite.lang, a.title()))
+                                     else:
+                                         comment = pywikibot.setAction(
+                                             pywikibot.translate(site, msg)
+@@ -597,10 +628,15 @@
+                                               + text[m.end():])
+                                     if not dry:
+                                         try:
++  	                                    pywikibot.output(u"(saving)")
++  
+                                             atrans.put(text, comment)
+                                         except pywikibot.LockedPage:
+                                             pywikibot.output(u'Page %s is locked!'
+                                                              % atrans.title())
++                                    else:
++	                                pywikibot.output(u"(Skipping (dry run))")
++
+                             cc[a.title()]=atrans.title()
+                     else:
+                         if atrans:
+@@ -624,11 +660,16 @@
+                                         % (fromsite.lang, a.title()))
+                                     text=re.sub(re_Link_FA,'',text)
+                                     if not dry:
++                                        pywikibot.output(u"(saving...)")
++
+                                         try:
+                                             atrans.put(text, comment)
+                                         except pywikibot.LockedPage:
+                                             pywikibot.output(u'Page %s is locked!'
+                                                              % atrans.title())
++                                    else:
++	                                pywikibot.output(u"(Skipping (dry run))")
++
+                             else:
+                                 pywikibot.output(u"(already done)")
+                             cc[a.title()]=atrans.title()
+@@ -693,6 +734,8 @@
+             processType = 'list'
+         elif arg == '-former':
+             processType = 'former'
++        elif arg == '-promising':
++            processType = 'promising'
+         elif arg == '-quiet':
+             quiet = True
+         elif arg == '-dry':
+@@ -714,6 +757,9 @@
+                 elif processType == 'former':
+                     fromlang=[ll for ll in former_lists.keys()
+                               if ll>=ll1 and ll<=ll2]
++                elif processType == 'promising':
++                    fromlang=[ll for ll in promising_lists.keys()
++                              if ll>=ll1 and ll<=ll2]
+                 else:
+                     fromlang=[ll for ll in featured_name.keys()
+                               if ll>=ll1 and ll<=ll2]
+@@ -727,6 +773,8 @@
+             fromlang=lists_name.keys()
+         elif processType == 'former':
+             fromlang=former_name.keys()
++        elif processType == 'promising':
++            fromlang=promising_name.keys()
+         else:
+             fromlang=featured_name.keys()
+ 
