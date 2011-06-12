@@ -6,8 +6,11 @@ suomenkielisessä Wikipediassa. Kokoelma sisältää seuraavat skriptit:
 
 birthcat.py - henkilöartikkelien lisääminen syntymä- ja
               kuolinvuosiluokkiin
-birthcat_autorun.py - sama kuin edellinen, mutta lisää ilman vahvistusta luokat sellaisiin 
-              artikkeleihin joiden tiedot voidaan vahvistaa en,de,es wikeistä ja ohittaa muut.
+
+              "birthcat -auto" lisää ilman vahvistusta luokat
+              sellaisiin artikkeleihin, joiden tiedot voidaan
+              vahvistaa en-, de- ja es-wikeistä
+
 sciname.py  - ohjausten lisääminen tieteellisistä nimistä
               eliöartikkeleihin.
 

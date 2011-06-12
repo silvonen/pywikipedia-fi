@@ -7,6 +7,8 @@ The following parameters are supported:
 
 &params;
 
+-auto             If given, run in autonomous mode.
+
 -dry              If given, doesn't do any real changes, but only shows
                   what would have been changed.
 
@@ -15,7 +17,7 @@ and the bot will only work on that single page.
 """
 __version__ = '$Id$'
 import wikipedia as pywikibot
-import catlib, pagegenerators, re
+import catlib, pagegenerators, os.path, re, urllib, time
 
 # This is required for the text that is shown when you run this script
 # with the parameter -help.
@@ -38,7 +40,7 @@ class BirthCatBot:
     dateFormat = {
         'fi': ur'(?:\[*\d+\.\s+\S+kuuta\]*,?\s+)?\[*(\d+)\]*',
         }
-    
+
     birthDeathCats = {
         'fi': {
             u'Vuonna %s syntyneet' : {
@@ -47,9 +49,18 @@ class BirthCatBot:
                     u'Syntymä- ja kuolinaika': 3,
                     u'Kuolinaika ja ikä': 3,
                     },
-                're': [
+                're1': [
                     re.compile(ur'syntynyt\s*=\s*' + dateFormat['fi']),
-                    re.compile(ur"'''[^)]*(?:\b(?:s\.|syntynyt)\s+|,\s+|\(|(?<!&ndash);\s+)" + dateFormat['fi']),
+# Old silvonen's regex
+#                    re.compile(ur"'''[^)]*(?:\bs\.\s+|,\s+|\(|(?<!&ndash);\s+)" + dateFormat['fi']),
+                    ],
+                're2': [
+                    # Searches "s. [[26. huhtikuuta]] [[1971]] " type birthdate string.
+                    re.compile(ur"(?:s\.|syn\.|syntynyt) ?\[?\[?[0-9]{1,2}\. [A-Za-zäö]*kuuta[^()]*?([0-9]{1,4})\]?\]?[\-\–\-\& .,)<]"),
+                    # Searches "([[26. huhtikuuta]] [[1971]] " type birthdate string.
+                    re.compile(ur"\(\[?\[?[0-9]{1,2}\. [A-Za-zäö]*kuuta[^()]*?([0-9]{1,4})\]?\]?[\-\–\-\& .,)<]"),
+                    # Searches "s. [[1971]] " type birthdate string.
+                    re.compile(ur"(?:s\.|syn\.|syntynyt) ?\[?\[?([0-9]{1,4})\]?\]?[\-\–\-\& .,)]<"),
                     ],
                 'newcat': lambda yr: u'{{Syntymävuosiluokka|%s|%s}}\n\n[[en:Category:%s births]]' % (yr[:-1], yr[-1], yr)
                 },
@@ -58,38 +69,49 @@ class BirthCatBot:
                     u'Syntymä- ja kuolinaika': 6,
                     u'Kuolinaika ja ikä': 6,
                     },
-                're': [
+                're1': [
                     re.compile(ur'kuollut\s*=\s*' + dateFormat['fi']),
-                    re.compile(ur"'''[^()]*\((?:[^)]|\([^)]*\))*(?:\b(?:k\.|kuollut)\s+|(?:[–—-]|&ndash;)\s*)" + dateFormat['fi']),
+# Old silvonen's regex
+#                    re.compile(ur"'''[^()]*\((?:[^)]|\([^)]*\))*(?:\bk\.\s+|(?:[M-bM-^@M-^SM-bM-^@M-^T-]|&ndash;)\s*)" + dateFormat['fi']),
+                    ],
+                're2': [
+                    # Searches "k. [[26. huhtikuuta]] [[1971]] " or "&dash; [[26. huhtikuuta]] [[1971]] " type deathdate string.
+                    re.compile(ur"(?:-|–|-|&dash;|&ndash;|&mdash;|k\.) +?\[?\[?[0-9]{1,2}\. [A-Za-zäö]*kuuta[^()]*?([0-9]{1,4})\]?\]?[ ,.;)<]"),
+                    # Searches "k. [[huhtikuu]] [[1971]] " or "&dash; [[huhtikuu]] [[1971]] " type deathdate string.
+                    re.compile(ur"(?:-|–|-|&dash;|&ndash;|&mdash;|k\.) +?\[?\[?[A-Za-zäö]*kuu +[^()]*?([0-9]{1,4})\]?\]?[ ,.;)<]"),
+                    # Searches "k. [[1971]] " or "&dash; [[1971]] " type deathdate string.
+                    re.compile(ur"'''.{1,100}(?:-|–|-|&dash;|&ndash;|&mdash;|k\.) +?\[?\[?([0-9]{1,4})\]?\]?[ ,.;)<]"),
                     ],
                 'newcat': lambda yr: u'{{Kuolinvuosiluokka|%s|%s}}\n\n[[en:Category:%s deaths]]' % (yr[:-1], yr[-1], yr)
                 }
             }
         }
-    
-    def __init__(self, generator, dry):
+
+    def __init__(self, generator, auto, dry):
         """
         Constructor. Parameters:
             * generator - The page generator that determines on which pages
                           to work on.
+            * auto      - If True, run in autonomous mode.
             * dry       - If True, doesn't do any real changes, but only shows
                           what would have been changed.
         """
         self.generator = generator
+        self.auto = auto
         self.dry = dry
         self.lang = pywikibot.getSite().lang
-        
+
         # Get the correct localized parameters
         self.site = pywikibot.getSite()
         self.summary = pywikibot.translate(self.site, self.msg)
         self.summaryNewCat = pywikibot.translate(self.site, self.msgNewCat)
         self.bdCats = pywikibot.translate(self.site, self.birthDeathCats)
 
-        self.defaultSortMatcher = None        
+        self.defaultSortMatcher = None
         defaultSortLabels = self.site.getmagicwords('defaultsort')
         if defaultSortLabels:
             self.defaultSortMatcher = re.compile('\{\{(' + '|'.join(defaultSortLabels) + ')')
-        
+
     def run(self):
         try:
             for page in self.generator:
@@ -106,7 +128,7 @@ class BirthCatBot:
                 sortKey = None
 
         return sortKey
-       
+
     def treat(self, page):
         """
         Adds the page to the appropriate birth and death year categories.
@@ -115,7 +137,17 @@ class BirthCatBot:
         text = self.load(page)
         if not text:
             return
-        
+
+        # Just print beginning of the article; strip full ref-tags
+        reMatcher= re.compile(u"(?:\A|\n)([^\n|{]*?'''.*?)(\n|\Z)")
+        match=reMatcher.search(text)
+        headertext=None
+        if match:
+            headertext=re.sub('<ref[^/]*?>.*?</ref>', '', match.group(1))
+            pywikibot.output("\n---- CLIP ---\n%s\n--- CLIP ---\n" % headertext)
+        else:
+            pywikibot.output("\n---- CLIP ---\n%s\n--- CLIP ---\n" % text)
+
         cats = page.categories()
         addCats = []
         newCatContent = {}
@@ -138,11 +170,13 @@ class BirthCatBot:
                         addCats.append(newCat)
                         newCatContent[newCat.title()] = bdCatInfo['newcat'](year)
 
+# First set of regex against full articletext
         if not addCats and not foundTemplates:
             for bdCat, bdCatInfo in self.bdCats.iteritems():
-                for reMatcher in bdCatInfo['re']:
+                for reMatcher in bdCatInfo['re1']:
                     match = reMatcher.search(text)
                     if match:
+                        pywikibot.output(u"%s" % match.groups())
                         year = match.group(1)
                         pywikibot.output(u'Found %s in %s' % (year, match.group(0)))
                         sortKey = self.getSortKey(cats, text)
@@ -152,9 +186,41 @@ class BirthCatBot:
                         else:
                             addCats.append(newCat)
                             newCatContent[newCat.title()] = bdCatInfo['newcat'](year)
+                        break;
+
+#second set of regex against the header text if available. If not then failback to full text
+        if not addCats and not foundTemplates:
+            for bdCat, bdCatInfo in self.bdCats.iteritems():
+                for reMatcher in bdCatInfo['re2']:
+                    if headertext:
+                        match = reMatcher.search(headertext)
+                    else:
+                        match= reMatcher.search(text);
+
+                    if match:
+                        pywikibot.output(u"%s" % match.groups())
+                        year = match.group(1)
+                        pywikibot.output(u'Found %s in %s' % (year, match.group(0)))
+                        sortKey = self.getSortKey(cats, text)
+                        newCat = catlib.Category(self.site, bdCat % year, sortKey=sortKey)
+                        if newCat in cats or newCat in addCats:
+                            pywikibot.output(u"%s is already in %s." % (page.title(), newCat.title()))
+                        else:
+                            addCats.append(newCat)
+                            newCatContent[newCat.title()] = bdCatInfo['newcat'](year)
+                        break;
 
         if addCats:
             cats.extend(addCats)
+
+            # This will Add category living people if needed
+            birth, death=self.getBirthDeathFromCats(cats, 'fi')
+            if birth>1885  and death==None:
+                newCat = catlib.Category(self.site, u'Elävät henkilöt', sortKey=sortKey)
+                if newCat not in cats:
+                    addCats.append(newCat)
+                    cats.append(newCat)
+
             text = pywikibot.replaceCategoryLinks(text, cats)
             summary = self.summary % ', '.join(map(lambda c: c.title(asLink=True), addCats))
             if not self.save(text, page, summary):
@@ -165,6 +231,7 @@ class BirthCatBot:
                     pywikibot.output(u'%s should be created.' % (cat.title()))
                     if not self.save(newCatContent[cat.title()], cat, self.summaryNewCat, minorEdit=False):
                         pywikibot.output(u'%s not created.' % cat.title(asLink=True))
+                    time.sleep(2)
 
     def load(self, page):
         """
@@ -183,6 +250,100 @@ class BirthCatBot:
             return text
         return None
 
+
+    def getBirthDeathFromCats(self,cats, lang):
+        birthDeathMatch = {
+          'fi': {
+             'birth' : u"Vuonna ([0-9]{1,4}) syntyneet",
+             'death' : u"Vuonna ([0-9]{1,4}) kuolleet"
+          },
+          'en': {
+             'birth' : u"Category:([0-9]{1,4}) births",
+             'death' : u"Category:([0-9]{1,4}) deaths"
+           },
+          'de': {
+             'birth' : u"Geboren ([0-9]{1,4})",
+             'death' : u"Gestorben ([0-9]{1,4})"
+           },
+          'fr': {
+             'birth' : u"Naissance en ([0-9]{1,4})",
+             'death' : u"Décès en ([0-9]{1,4})"
+           },
+          'es': {
+             'birth' : u"Nacidos en ([0-9]{1,4})",
+             'death' : u"Fallecidos en ([0-9]{1,4})"
+           }
+        }
+
+        if lang in birthDeathMatch:
+            death=None
+            birth=None
+            reMatcher= re.compile(birthDeathMatch[lang]['birth'])
+            for cat in cats:
+                match=reMatcher.search(cat.title())
+                if match:
+                    birth=match.group(1)
+
+            reMatcher= re.compile(birthDeathMatch[lang]['death'])
+            for cat in cats:
+                match=reMatcher.search(cat.title())
+                if match:
+                    death=match.group(1)
+            return birth, death
+        return None, None
+
+    def iwYearCheck(self,page, birth, death):
+
+        iwMatch=False
+        deathOK=False
+        birthOK=False
+        if birth==None:
+            return False
+
+        if death!=None:
+            age=int(death)
+            if age<0 or age>125:
+                return False
+
+        iw=page.interwiki()
+        for linkedPage in iw:
+            if linkedPage.site().lang not in ['en', 'de', 'es']:
+                continue
+            try:
+                iwbirth, iwdeath = self.getBirthDeathFromCats(linkedPage.categories(), linkedPage.site().lang)
+            except pywikibot.IsRedirectPage:
+                continue
+
+            time.sleep(0.1)
+
+            if (iwbirth==None):
+                iwMatch=iwMatch
+            elif birth==iwbirth:
+                pywikibot.output(u'%s\t%s\tBirth match OK: %s : iw= %s' % (linkedPage.site().lang,  page.title(asLink=True), birth, iwbirth))
+                iwMatch=True
+                birthOK=True
+            else:
+                pywikibot.output(u'%s\t%s\tBirth match FAILED: %s : iw= %s' % (linkedPage.site().lang,  page.title(asLink=True), birth, iwbirth))
+                iwMatch=False
+                return iwMatch
+
+            if (iwdeath==None):
+                iwMatch=iwMatch
+            elif (death==iwdeath):
+                pywikibot.output(u'%s\t%s\tDeath match OK: %s : iw= %s' % (linkedPage.site().lang,  page.title(asLink=True), death, iwdeath))
+                iwMatch=True
+                deathOK=True
+            else:
+                pywikibot.output(u'%s\t%s\tDeath match FAILED: %s : iw= %s' % (linkedPage.site().lang,  page.title(asLink=True), death, iwdeath))
+                iwMatch=False
+                return iwMatch
+
+        if (death!=None and deathOK==False):
+            return False
+        if (birth!=None and birthOK==False):
+            return False
+        return iwMatch
+
     def save(self, text, page, comment, minorEdit=True, botflag=True):
         # only save if something was changed
         try:
@@ -197,10 +358,41 @@ class BirthCatBot:
             # show what was changed
             pywikibot.showDiff(oldText, text)
             pywikibot.output(u'Comment: %s' %comment)
+
+            # if we are not adding the new category then check years
+            reMatcher= re.compile(u"\ALuokka:")
+            match=reMatcher.search(page.title())
+
+            if not match:
+                reMatcher= re.compile(u"Luokka:Vuonna ([0-9]{1,4}) syntyneet")
+                match=reMatcher.search(text)
+                if match:
+                    birth=match.group(1)
+                else:
+                    birth=None
+
+                reMatcher= re.compile(u"Luokka:Vuonna ([0-9]{1,4}) kuolleet")
+                match=reMatcher.search(text)
+                if match:
+                    death=match.group(1)
+                else:
+                    death=None
+
+                if self.auto:
+                    iwCheck=self.iwYearCheck(page, birth, death)
+                    if iwCheck == False:
+                        pywikibot.output(
+                            u'Skipping %s because of edit iwcheck failed'
+                            % (page.title()))
+                        return False
+
             if not self.dry:
-                choice = pywikibot.inputChoice(
-                    u'Do you want to accept these changes?',
-                    ['Yes', 'No'], ['y', 'N'], 'N')
+                if self.auto:
+                    choice = 'y'
+                else:
+                    choice = pywikibot.inputChoice(
+                        u'Do you want to accept these changes?',
+                        ['Yes', 'No'], ['y', 'N'], 'N')
                 if choice == 'y':
                     try:
                         # Save the page
@@ -221,6 +413,17 @@ class BirthCatBot:
         return False
 
 def main():
+    # HACK: This can be removed when pywikipedia bug 3315395 has been fixed
+    safetyLock = 'birthcat-unlock.dat'
+    if not os.path.exists(safetyLock):
+        choice = pywikibot.inputChoice(u'Have you patched textlib.py in pywikipedia?',
+            ['Yes', 'No'], ['y', 'N'], 'N')
+        if choice == 'y':
+            open(safetyLock, 'w').close()
+        else:
+            return False
+    # END OF HACK
+
     # This factory is responsible for processing command line arguments
     # that are also used by other scripts and that determine on which pages
     # to work on.
@@ -233,11 +436,15 @@ def main():
     # If dry is True, doesn't do any real changes, but only show
     # what would have been changed.
     dry = False
+    # If auto is True, run in autonomous mode.
+    auto = False
 
     # Parse command line arguments
     for arg in pywikibot.handleArgs():
         if arg.startswith("-dry"):
             dry = True
+        elif arg.startswith("-auto"):
+            auto = True
         else:
             # check if a standard argument like
             # -start:XYZ or -ref:Asdf was given.
@@ -256,7 +463,7 @@ def main():
         # The preloading generator is responsible for downloading multiple
         # pages from the wiki simultaneously.
         gen = pagegenerators.PreloadingGenerator(gen)
-        bot = BirthCatBot(gen, dry)
+        bot = BirthCatBot(gen, auto, dry)
         bot.run()
     else:
         pywikibot.showHelp()
