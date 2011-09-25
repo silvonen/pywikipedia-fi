@@ -60,7 +60,7 @@ class BirthCatBot:
                     # Searches "([[26. huhtikuuta]] [[1971]] " type birthdate string.
                     re.compile(ur"\(\[?\[?[0-9]{1,2}\. [A-Za-zäö]*kuuta[^()]*?([0-9]{1,4})\]?\]?[\-\–\-\& .,)<]"),
                     # Searches "s. [[1971]] " type birthdate string.
-                    re.compile(ur"(?:s\.|syn\.|syntynyt) ?\[?\[?([0-9]{1,4})\]?\]?[\-\–\-\& .,)]<"),
+                    re.compile(ur"(?:s\.|syn\.|syntynyt) ?\[?\[?([0-9]{1,4})\]?\]?[\-\–\-\& .,)<]"),
                     ],
                 'newcat': lambda yr: u'{{Syntymävuosiluokka|%s|%s}}\n\n[[en:Category:%s births]]' % (yr[:-1], yr[-1], yr)
                 },
