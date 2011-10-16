@@ -364,19 +364,34 @@ class BirthCatBot:
             match=reMatcher.search(page.title())
 
             if not match:
-                reMatcher= re.compile(u"Luokka:Vuonna ([0-9]{1,4}) syntyneet")
-                match=reMatcher.search(text)
-                if match:
-                    birth=match.group(1)
-                else:
-                    birth=None
 
-                reMatcher= re.compile(u"Luokka:Vuonna ([0-9]{1,4}) kuolleet")
-                match=reMatcher.search(text)
-                if match:
-                    death=match.group(1)
+                reMatcher= re.compile(u"Luokka:Vuonna ([0-9]{1,4}) syntyneet")
+                match=reMatcher.findall(text)
+                if len(match)>1:
+                    pywikibot.output(
+                        u'Skipping %s because of multiple birth cats'
+                        % (page.title()))
+                    return False
                 else:
-                    death=None
+                    match=reMatcher.search(text)
+                    if match:
+                       birth=match.group(1)
+                    else:
+                       birth=None
+               
+                reMatcher= re.compile(u"Luokka:Vuonna ([0-9]{1,4}) kuolleet")
+                match=reMatcher.findall(text)
+                if len(match)>1:
+                    pywikibot.output(
+                        u'Skipping %s because of multiple death cats'
+                        % (page.title()))
+                    return False
+                else:
+                    match=reMatcher.search(text)
+                    if match:
+                        death=match.group(1)
+                    else:
+                        death=None
 
                 if self.auto:
                     iwCheck=self.iwYearCheck(page, birth, death)
