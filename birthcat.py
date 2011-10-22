@@ -262,16 +262,16 @@ class BirthCatBot:
              'death' : u"Category:([0-9]{1,4}) deaths"
            },
           'de': {
-             'birth' : u"Geboren ([0-9]{1,4})",
-             'death' : u"Gestorben ([0-9]{1,4})"
+             'birth' : u"Geboren ([0-9]{1,4})\Z",
+             'death' : u"Gestorben ([0-9]{1,4})\Z"
            },
           'fr': {
              'birth' : u"Naissance en ([0-9]{1,4})",
              'death' : u"Décès en ([0-9]{1,4})"
            },
           'es': {
-             'birth' : u"Nacidos en ([0-9]{1,4})",
-             'death' : u"Fallecidos en ([0-9]{1,4})"
+             'birth' : u"Nacidos en ([0-9]{1,4})\Z",
+             'death' : u"Fallecidos en ([0-9]{1,4})\Z"
            }
         }
 
@@ -310,7 +310,7 @@ class BirthCatBot:
 
         iw=page.interwiki()
         for linkedPage in iw:
-            if linkedPage.site().lang not in ['en', 'de', 'es']:
+            if linkedPage.site().lang not in ['de', 'es']:
                 continue
             try:
                 iwbirth, iwdeath = self.getBirthDeathFromCats(linkedPage.categories(), linkedPage.site().lang)
