@@ -301,8 +301,11 @@ class BirthCatBot:
             return False
 
         if death!=None:
-            age=int(death)
+            age=int(death) - int(birth)
             if age<0 or age>125:
+                pywikibot.output(
+                        u'Skipping %s because age of %s'
+                        % (page.title(), age))
                 return False
 
         iw=page.interwiki()
