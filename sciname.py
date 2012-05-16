@@ -94,7 +94,7 @@ class SciNameBot:
         """
         Adds a redirect from scientific name to page if it does not exist.
         """
-        pywikibot.output(u"Processing page %s..." % page.aslink())
+        pywikibot.output(u"Processing page %s..." % page.title(asLink=True))
         for tmpl, params in page.templatesWithParams():
             if tmpl in self.templates:
                 sciName = self.getSciName(params)
@@ -107,11 +107,11 @@ class SciNameBot:
                 else:
                     redirPage = pywikibot.Page(pywikibot.getSite(), sciName)
                     if redirPage.exists():
-                        pywikibot.output(u"Page %s exists; skipping." % redirPage.aslink())
+                        pywikibot.output(u"Page %s exists; skipping." % redirPage.title(asLink=True))
                         self.cache[self.lang][sciName] = page.title()
                     else:
-                        pywikibot.output(u"Creating redirect page %s." % redirPage.aslink())
-                        text = u'#%s %s' % (pywikibot.getSite().redirect(True), page.aslink())
+                        pywikibot.output(u"Creating redirect page %s." % redirPage.title(asLink=True))
+                        text = u'#%s %s' % (pywikibot.getSite().redirect(True), page.title(asLink=True))
                         if not self.dry:
                             if self.always:
                                 choice = 'y'
@@ -120,9 +120,9 @@ class SciNameBot:
                             if choice == 'y':
                                 try:
                                     # Save the page
-                                    redirPage.put(text, comment=self.summary % page.aslink())
+                                    redirPage.put(text, comment=self.summary % page.title(asLink=True))
                                 except pywikibot.LockedPage:
-                                    pywikibot.output(u"Page %s is locked; skipping." % redirPage.aslink())
+                                    pywikibot.output(u"Page %s is locked; skipping." % redirPage.title(asLink=True))
                                 except pywikibot.EditConflict:
                                     pywikibot.output(u'Skipping %s because of edit conflict' % (redirPage.title()))
                                 except pywikibot.SpamfilterError, error:
