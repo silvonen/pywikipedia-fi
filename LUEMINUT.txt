@@ -1,3 +1,6 @@
+HUOMIO: Tämä projekti on juuri siirretty GitHubiin, eivätkä ohjeet
+ole ajan tasalla!
+
 PYWIKIPEDIA-FI
 
 Pywikipedia-fi on kokoelma Python Wikipedia Robot Frameworkiin
