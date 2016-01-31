@@ -17,9 +17,9 @@ The following parameters are supported:
 All other parameters will be regarded as part of the title of a single page,
 and the bot will only work on that single page.
 """
-__version__ = '$Id$'
-import wikipedia as pywikibot
-import pagegenerators, os.path, pickle, re
+import pywikibot
+from pywikibot import pagegenerators
+import os.path, pickle, re
 
 # This is required for the text that is shown when you run this script
 # with the parameter -help.
@@ -88,7 +88,9 @@ class SciNameBot:
                 self.treat(page)
         except KeyboardInterrupt:
             pywikibot.output('\nQuitting program...')
-        pickle.dump(self.cache, file(self.cacheFilename, 'wb'))
+
+        if not self.dry:
+            pickle.dump(self.cache, file(self.cacheFilename, 'wb'))
 
     def treat(self, page):
         """
@@ -96,7 +98,7 @@ class SciNameBot:
         """
         pywikibot.output(u"Processing page %s..." % page.title(asLink=True))
         for tmpl, params in page.templatesWithParams():
-            if tmpl in self.templates:
+            if tmpl.title(withNamespace=False) in self.templates:
                 sciName = self.getSciName(params)
                 if not sciName:
                     pywikibot.output(u"Scientific name not found; skipping.")
