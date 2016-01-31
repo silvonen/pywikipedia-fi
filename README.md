@@ -1,6 +1,6 @@
 # pywikipedia-fi
 
-*Pywikipedia scripts used on the Finnish Wikipedia.*
+*Pywikibot scripts used on the Finnish Wikipedia.*
 
 Pywikipedia-fi on kokoelma Pywikibotiin perustuvia työkaluja, joita käytetään suomenkielisessä Wikipediassa. Kokoelma sisältää seuraavat skriptit:
 * `birthcat.py` – Henkilöartikkelien lisääminen syntymä- ja kuolinvuosiluokkiin. `birthcat -auto` lisää ilman vahvistusta luokat sellaisiin artikkeleihin, joiden tiedot voidaan vahvistaa en-, de- ja es-wikeistä.
